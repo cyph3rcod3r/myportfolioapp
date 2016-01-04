@@ -10,4 +10,9 @@
     <string name="btn_text_myapp">Capstone: My Own App</string>
     <string name="movies_db_api_test">YOUR_API_KEY</string>
     <string name="pop_movies">Pop Movies</string>
+    <string name="pop_movies_detail">Movie Detail</string>
+    <string name="method_type">POST</string>
+    <string name="user_property">Content-length</string>
+    <string name="action_popular">Most Popular</string>
+    <string name="action_highest_rated">Highest Rated</string>
 </resources>

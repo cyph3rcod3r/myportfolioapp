@@ -7,4 +7,9 @@
     <dimen name="margin_large">16dp</dimen>
     <dimen name="width_height">256dp</dimen>
     <dimen name="margin_small">8dp</dimen>
+    <dimen name="movie_title_height">128dp</dimen>
+    <dimen name="txt_size_xlarge">30sp</dimen>
+    <dimen name="txt_size_large">24sp</dimen>
+    <dimen name="txt_size_medium">18sp</dimen>
+    <dimen name="txt_size_small">14sp</dimen>
 </resources>

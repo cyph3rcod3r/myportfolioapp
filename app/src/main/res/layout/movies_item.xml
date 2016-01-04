@@ -2,6 +2,10 @@
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/imv_movies_item"
     android:layout_width="match_parent"
+    android:scaleType="centerCrop"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackground"
     android:layout_height="@dimen/width_height">
 
 </ImageView>

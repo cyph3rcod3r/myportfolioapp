@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/movie_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include layout="@layout/toolbar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txv_movie_detail_title"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/movie_title_height"
+                android:background="@android:color/holo_blue_dark"
+                android:gravity="center_vertical"
+                android:padding="@dimen/activity_horizontal_margin"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/txt_size_xlarge" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="@dimen/activity_horizontal_margin">
+
+                <ImageView
+                    android:id="@+id/imv_movie_detail_thumb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerCrop" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/txv_movie_detail_year"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/txt_size_large" />
+
+                    <TextView
+                        android:id="@+id/txv_movie_detail_running_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/txt_size_medium"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/txv_movie_detail_rating"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@android:color/black"
+                        android:textSize="@dimen/txt_size_small" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txv_movie_detail_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/activity_horizontal_margin"
+                android:textSize="@dimen/txt_size_small" />
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>
