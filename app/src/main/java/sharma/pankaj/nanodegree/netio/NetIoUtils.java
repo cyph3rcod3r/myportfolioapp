@@ -10,15 +10,14 @@ import android.net.NetworkInfo;
 public class NetIoUtils {
     // URls
     public static final String BASE_MOVIE_IMAGE_URL = "http://image.tmdb.org/t/p/";
-    public static final String BASE_MOVIE_DB_URL = "http://api.themoviedb.org/3/discover/movie";
-
+    public static final String BASE_MOVIE_DB_URL = "http://api.themoviedb.org/3/";
+    public static final String YOUTUBE_URL = "https://www.youtube.com/watch?v=";
+    public static final String YOUTUBE_THUMBNAIL_URL = "http://img.youtube.com/vi/";
+    public static final String YOUTUBE_THUMBNAIL_FILE = "/0.jpg";
     //params
     public static final String MOVIES_THUMBNAIL_SIZE = "w185/";
     public static final String SORT_POPULARITY = "popularity.desc";
     public static final String SORT_HIGHEST_RATED = "vote_count.desc";
-
-    public static final String PARAM_SORT = "?sort_by=";
-    public static final String PARAM_API_KEY = "&api_key=";
 
 
     public static boolean isConnectingToInternet(Context context) {

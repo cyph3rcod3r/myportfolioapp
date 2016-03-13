@@ -6,6 +6,6 @@
     android:clickable="true"
     android:focusable="true"
     android:background="?attr/selectableItemBackground"
-    android:layout_height="@dimen/width_height">
+    android:layout_height="@dimen/width_height_item">
 
 </ImageView>

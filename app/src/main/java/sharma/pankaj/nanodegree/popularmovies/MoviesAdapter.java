@@ -1,7 +1,6 @@
 package sharma.pankaj.nanodegree.popularmovies;
 
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,9 +9,11 @@ import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import sharma.pankaj.nanodegree.R;
+import sharma.pankaj.nanodegree.interfaces.OnItemClickListener;
 import sharma.pankaj.nanodegree.models.MoviesDB;
 import sharma.pankaj.nanodegree.netio.NetIoUtils;
 
@@ -21,12 +22,13 @@ import sharma.pankaj.nanodegree.netio.NetIoUtils;
  */
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesDBHolder> {
 
-    private final List<MoviesDB> moviesDBList;
-    private final AppCompatActivity context;
+    private List<MoviesDB> moviesDBList = new ArrayList<>();
+    private final FragmentActivity context;
+    private final OnItemClickListener listener;
 
-    public MoviesAdapter(AppCompatActivity context, List<MoviesDB> moviesDBList) {
-        this.moviesDBList = moviesDBList;
+    public MoviesAdapter(FragmentActivity context, OnItemClickListener listener) {
         this.context = context;
+        this.listener = listener;
     }
 
     @Override
@@ -44,8 +46,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesDBHolder> {
         holder.mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                context.startActivity(new Intent(context, MovieDetailActivity.class)
-                        .putExtra(MovieDetailActivity.ARG_OBJECT, moviesDBList.get(position)));
+                listener.onItemClick(moviesDBList.get(position));
             }
         });
     }
@@ -54,4 +55,26 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesDBHolder> {
     public int getItemCount() {
         return moviesDBList.size();
     }
+
+    /**
+     * Set New Items, Make sure to clear first
+     *
+     * @param moviesDBList
+     */
+    public void setMovies(List<MoviesDB> moviesDBList) {
+        this.moviesDBList.clear();
+        this.moviesDBList.addAll(moviesDBList);
+        this.notifyItemRangeInserted(0, this.moviesDBList.size() - 1);
+    }
+
+    public void clearMovies() {
+        int size = this.moviesDBList.size();
+        if (size > 0) {
+            for (int i = 0; i < size; i++) {
+                this.moviesDBList.remove(0);
+            }
+            this.notifyItemRangeRemoved(0, size);
+        }
+    }
+
 }

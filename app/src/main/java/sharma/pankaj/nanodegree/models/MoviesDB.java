@@ -3,10 +3,11 @@ package sharma.pankaj.nanodegree.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MoviesDB implements Parcelable {
 
@@ -52,6 +53,16 @@ public class MoviesDB implements Parcelable {
     @SerializedName("vote_average")
     @Expose
     private double voteAverage;
+
+    private boolean isFavourite;
+
+    public boolean isFavourite() {
+        return isFavourite;
+    }
+
+    public void setIsFavourite(boolean isFavourite) {
+        this.isFavourite = isFavourite;
+    }
 
     protected MoviesDB(Parcel in) {
         posterPath = in.readString();

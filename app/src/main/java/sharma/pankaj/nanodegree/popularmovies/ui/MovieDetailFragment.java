@@ -1,12 +1,12 @@
-package sharma.pankaj.nanodegree.popularmovies;
+package sharma.pankaj.nanodegree.popularmovies.ui;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
@@ -34,12 +34,16 @@ import sharma.pankaj.nanodegree.models.response.ReviewsResponse;
 import sharma.pankaj.nanodegree.models.response.TrailersResponse;
 import sharma.pankaj.nanodegree.netio.NetIoUtils;
 import sharma.pankaj.nanodegree.netio.RestClient;
+import sharma.pankaj.nanodegree.popularmovies.PopularMoviesActivity;
+import sharma.pankaj.nanodegree.popularmovies.ReviewsAdapter;
 
 /**
- * Created by Cyph3r on 04/01/16.
+ * Created by Cyph3r on 21/02/16.
  */
-public class MovieDetailActivity extends AppCompatActivity implements Callback<TrailersResponse> {
+public class MovieDetailFragment extends BaseFragment implements Callback<TrailersResponse> {
 
+
+    private static final String SCROLL_STATE = "previous_state";
     private MoviesDB moviesDB;
     public static final String ARG_OBJECT = MoviesDB.class.getName();
     private TextView txvTitle, txvYear, txvRunningTime, txvRate, txvDesc;
@@ -54,35 +58,43 @@ public class MovieDetailActivity extends AppCompatActivity implements Callback<T
     private ProgressBar pbTrailer;
     private ProgressBar pbReviews;
     private ReviewsAdapter mReviewsAdapter;
+    private PopularMoviesActivity mActivity;
+    private View rootView;
 
-    private void initToolbar() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.pop_movies_detail);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    public static MovieDetailFragment newInstance() {
+//        Bundle args = new Bundle();
+        MovieDetailFragment fragment = new MovieDetailFragment();
+//        args.putParcelable(ARG_OBJECT, moviesDB);
+//        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mActivity = (PopularMoviesActivity) activity;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_movie_detail);
-        initToolbar();
-
-        if (getIntent() != null) {
-            if (getIntent().hasExtra(ARG_OBJECT)) {
-                moviesDB = getIntent().getParcelableExtra(ARG_OBJECT);
-            }
-        }
+//        moviesDB = getArguments().getParcelable(ARG_OBJECT);
         mRestClient = new RestClient();
-        listView = (ListView) findViewById(R.id.listview_reviews);
-        mReviewsAdapter = new ReviewsAdapter(this);
-        initListViewHeader();
+    }
 
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        rootView = View.inflate(mActivity, R.layout.fragment_movie_detail, null);
+        listView = (ListView) rootView.findViewById(R.id.listview_reviews);
+        mReviewsAdapter = new ReviewsAdapter(mActivity);
+        initListViewHeader();
+        return rootView;
     }
 
     private void initListViewHeader() {
         if (headerView == null) {
-            headerView = View.inflate(this, R.layout.header_movie_detail, null);
+            headerView = View.inflate(mActivity, R.layout.header_movie_detail, null);
         }
         txvDesc = (TextView) headerView.findViewById(R.id.txv_movie_detail_desc);
         txvRate = (TextView) headerView.findViewById(R.id.txv_movie_detail_rating);
@@ -94,27 +106,11 @@ public class MovieDetailActivity extends AppCompatActivity implements Callback<T
 
         imvThumb = (ImageView) headerView.findViewById(R.id.imv_movie_detail_thumb);
         movieContainer = (LinearLayout) headerView.findViewById(R.id.movie_container);
-        setData(moviesDB);
         gridLayout = (GridLayout) headerView.findViewById(R.id.grid_layout_trailers);
-
-        listView.addHeaderView(headerView, null, false);
-        listView.setAdapter(mReviewsAdapter);
-        getTrailers();
-        getReviews();
+        listView.addHeaderView(headerView);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void setData(MoviesDB object) {
+    public void setData(MoviesDB object) {
         if (object == null) {
             showInfo();
             return;
@@ -124,26 +120,33 @@ public class MovieDetailActivity extends AppCompatActivity implements Callback<T
             txvTitle.setText(object.getTitle());
             txvRate.setText(object.getVoteAverage() + "/" + "10");
             txvDesc.setText(object.getOverview());
-            Picasso.with(this).load(NetIoUtils.BASE_MOVIE_IMAGE_URL
+            Picasso.with(mActivity).load(NetIoUtils.BASE_MOVIE_IMAGE_URL
                     + NetIoUtils.MOVIES_THUMBNAIL_SIZE + object.getPosterPath()).into(imvThumb);
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        moviesDB = object;
+        mReviewsAdapter = new ReviewsAdapter(mActivity);
+        listView.setAdapter(mReviewsAdapter);
+        gridLayout.removeAllViews();
+        getTrailers();
+        getReviews();
+        setIsFirstTimeLoad(false);
 
     }
 
     private void showInfo() {
-        Snackbar.make(movieContainer, "Data Not Found", Snackbar.LENGTH_INDEFINITE).setAction("Exit", new View.OnClickListener() {
+        Snackbar.make(movieContainer, "Data No Found", Snackbar.LENGTH_INDEFINITE).setAction("Exit", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onBackPressed();
+                mActivity.onBackPressed();
             }
         }).show();
     }
 
     private void getTrailers() {
         pbTrailer.setVisibility(View.VISIBLE);
-        if (NetIoUtils.isConnectingToInternet(this)) {
+        if (NetIoUtils.isConnectingToInternet(mActivity)) {
             Call<TrailersResponse> call = mRestClient
                     .getMovieApis()
                     .getMovieTrailers(moviesDB.getId(), getString(R.string.movies_db_api));
@@ -163,7 +166,7 @@ public class MovieDetailActivity extends AppCompatActivity implements Callback<T
 
     private void getReviews() {
         pbReviews.setVisibility(View.VISIBLE);
-        if (NetIoUtils.isConnectingToInternet(this)) {
+        if (NetIoUtils.isConnectingToInternet(mActivity)) {
             Call<ReviewsResponse> call = mRestClient
                     .getMovieApis()
                     .getMovieReviews(moviesDB.getId(), getString(R.string.movies_db_api));
@@ -185,7 +188,7 @@ public class MovieDetailActivity extends AppCompatActivity implements Callback<T
             });
 
         } else {
-            Snackbar.make(listView, "Unable to load reviews at the moment..", Snackbar.LENGTH_INDEFINITE)
+            Snackbar.make(listView, "Unable to load trailers at the moment..", Snackbar.LENGTH_INDEFINITE)
                     .setAction("Retry", new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -211,26 +214,31 @@ public class MovieDetailActivity extends AppCompatActivity implements Callback<T
             return;
         }
         for (Trailer t : trailers) {
-            gridLayout.addView(prepareLayoutForTrailer(t));
+            View child = prepareLayoutForTrailer(t);
+            gridLayout.addView(child);
+            GridLayout.LayoutParams params = (GridLayout.LayoutParams) child.getLayoutParams();
+            params.width = (gridLayout.getWidth() / gridLayout.getColumnCount()) - params.rightMargin - params.leftMargin;
+            child.setLayoutParams(params);
         }
     }
 
     private View prepareLayoutForTrailer(final Trailer t) {
-        final RelativeLayout layout = new RelativeLayout(this);
-        final ImageView view = new ImageView(this);
+        final RelativeLayout layout = new RelativeLayout(mActivity);
+        final ImageView view = new ImageView(mActivity);
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(NetIoUtils.YOUTUBE_URL + t.getKey())));
             }
         });
-        Picasso.with(this)
+        view.setPadding(10, 0, 10, 0);
+        Picasso.with(mActivity)
                 .load(NetIoUtils.YOUTUBE_THUMBNAIL_URL
                         + t.getKey() + NetIoUtils.YOUTUBE_THUMBNAIL_FILE)
                 .into(view, new com.squareup.picasso.Callback() {
                     @Override
                     public void onSuccess() {
-                        ImageView icon = new ImageView(MovieDetailActivity.this);
+                        ImageView icon = new ImageView(mActivity);
                         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
                         icon.setImageResource(R.drawable.ic_youtube);
                         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -250,5 +258,19 @@ public class MovieDetailActivity extends AppCompatActivity implements Callback<T
         return layout;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(SCROLL_STATE, listView.getFirstVisiblePosition());
+    }
 
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            listView.smoothScrollToPosition(savedInstanceState.getInt(SCROLL_STATE));
+            mActivity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            mActivity.invalidateOptionsMenu();
+        }
+    }
 }
