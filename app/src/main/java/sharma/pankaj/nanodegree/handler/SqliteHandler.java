@@ -18,10 +18,8 @@ public class SqliteHandler extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "portfolio";
 
-    // Contacts table name
     public static final String TABLE_FAVOURITE_MOVIES = "favourite_movies";
 
-    // Contacts Table Columns names
     private static final String KEY_ID = "movieId";
     private static final String KEY_TITLE = "title";
     private static final String KEY_POSTER = "poster_path";

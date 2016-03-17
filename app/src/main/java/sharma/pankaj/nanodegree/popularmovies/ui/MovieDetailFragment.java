@@ -240,7 +240,7 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
         if (NetIoUtils.isConnectingToInternet(mActivity)) {
             Call<TrailersResponse> call = mRestClient
                     .getMovieApis()
-                    .getMovieTrailers(moviesDB.getId(), getString(R.string.movies_db_api_test));
+                    .getMovieTrailers(moviesDB.getId(), getString(R.string.movies_db_api));
             call.enqueue(this);
 
         } else {
@@ -269,7 +269,7 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
         if (NetIoUtils.isConnectingToInternet(mActivity)) {
             Call<ReviewsResponse> call = mRestClient
                     .getMovieApis()
-                    .getMovieReviews(moviesDB.getId(), getString(R.string.movies_db_api_test));
+                    .getMovieReviews(moviesDB.getId(), getString(R.string.movies_db_api));
             call.enqueue(new Callback<ReviewsResponse>() {
                 @Override
                 public void onResponse(Response<ReviewsResponse> response) {
