@@ -2,13 +2,20 @@ package sharma.pankaj.nanodegree.popularmovies.ui;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,12 +28,14 @@ import com.squareup.picasso.Picasso;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import sharma.pankaj.nanodegree.R;
+import sharma.pankaj.nanodegree.handler.SqliteHandler;
 import sharma.pankaj.nanodegree.models.MoviesDB;
 import sharma.pankaj.nanodegree.models.Review;
 import sharma.pankaj.nanodegree.models.Trailer;
@@ -34,6 +43,7 @@ import sharma.pankaj.nanodegree.models.response.ReviewsResponse;
 import sharma.pankaj.nanodegree.models.response.TrailersResponse;
 import sharma.pankaj.nanodegree.netio.NetIoUtils;
 import sharma.pankaj.nanodegree.netio.RestClient;
+import sharma.pankaj.nanodegree.popularmovies.MovieDetailActivity;
 import sharma.pankaj.nanodegree.popularmovies.PopularMoviesActivity;
 import sharma.pankaj.nanodegree.popularmovies.ReviewsAdapter;
 
@@ -47,6 +57,7 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
     private MoviesDB moviesDB;
     public static final String ARG_OBJECT = MoviesDB.class.getName();
     private TextView txvTitle, txvYear, txvRunningTime, txvRate, txvDesc;
+    private CheckBox cbFavourite;
     private ImageView imvThumb;
     private LinearLayout movieContainer;
     private SimpleDateFormat mYearFormat = new SimpleDateFormat("yyyy");
@@ -58,21 +69,26 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
     private ProgressBar pbTrailer;
     private ProgressBar pbReviews;
     private ReviewsAdapter mReviewsAdapter;
-    private PopularMoviesActivity mActivity;
+    private AppCompatActivity mActivity;
     private View rootView;
+    private SqliteHandler sqliteHandler;
+    private List<Trailer> trailers = new ArrayList<>();
+    private List<Review> reviews = new ArrayList<>();
 
     public static MovieDetailFragment newInstance() {
-//        Bundle args = new Bundle();
         MovieDetailFragment fragment = new MovieDetailFragment();
-//        args.putParcelable(ARG_OBJECT, moviesDB);
-//        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        mActivity = (PopularMoviesActivity) activity;
+        if (activity instanceof PopularMoviesActivity) {
+            mActivity = (PopularMoviesActivity) activity;
+        } else {
+            mActivity = (MovieDetailActivity) activity;
+        }
+        sqliteHandler = new SqliteHandler(mActivity);
     }
 
     @Override
@@ -80,6 +96,37 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
         super.onCreate(savedInstanceState);
 //        moviesDB = getArguments().getParcelable(ARG_OBJECT);
         mRestClient = new RestClient();
+        if (mActivity instanceof MovieDetailActivity)
+            setRetainInstance(true);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.movie_detail_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_share_trailer) {
+            shareTrailer();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void shareTrailer() {
+        if (trailers.isEmpty()) {
+            showInfo("No trailer available for this movie.");
+            return;
+        }
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, "Hi, Checkout the trailer for " + moviesDB.getTitle() + " here : " + Uri.parse(NetIoUtils.YOUTUBE_URL + trailers.get(0).getKey()));
+        sendIntent.setType("text/plain");
+        startActivity(sendIntent);
     }
 
     @Nullable
@@ -103,6 +150,21 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
         txvYear = (TextView) headerView.findViewById(R.id.txv_movie_detail_year);
         pbTrailer = (ProgressBar) headerView.findViewById(R.id.pb_trailers);
         pbReviews = (ProgressBar) headerView.findViewById(R.id.pb_reviews);
+        cbFavourite = (CheckBox) headerView.findViewById(R.id.cb_favourite);
+
+        cbFavourite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    sqliteHandler.addFavouriteMovie(moviesDB);
+                } else {
+                    int affect = sqliteHandler.deleteFavouriteMovie(moviesDB);
+                    if (affect > 0 && mActivity instanceof PopularMoviesActivity) {
+                        ((PopularMoviesActivity) mActivity).loadFavouriteMovies();
+                    }
+                }
+            }
+        });
 
         imvThumb = (ImageView) headerView.findViewById(R.id.imv_movie_detail_thumb);
         movieContainer = (LinearLayout) headerView.findViewById(R.id.movie_container);
@@ -112,9 +174,13 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
 
     public void setData(MoviesDB object) {
         if (object == null) {
-            showInfo();
+            showInfo("Data No Found");
             return;
         }
+
+        trailers.clear();
+        reviews.clear();
+
         try {
             txvYear.setText(mYearFormat.format(mDateFormat.parse(object.getReleaseDate())));
             txvTitle.setText(object.getTitle());
@@ -126,17 +192,37 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
             e.printStackTrace();
         }
         moviesDB = object;
+
+        if (sqliteHandler.getFavouriteMovie(moviesDB.getId()) != null) {
+            cbFavourite.setChecked(true);
+        } else {
+            cbFavourite.setChecked(false);
+        }
+
         mReviewsAdapter = new ReviewsAdapter(mActivity);
         listView.setAdapter(mReviewsAdapter);
         gridLayout.removeAllViews();
+        if (isAdded()) {
+            int currentOrientation = getResources().getConfiguration().orientation;
+            if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE && mActivity instanceof MovieDetailActivity) {
+                gridLayout.setColumnCount(3);
+            } else {
+                gridLayout.setColumnCount(2);
+            }
+        }
+
         getTrailers();
         getReviews();
         setIsFirstTimeLoad(false);
 
     }
 
-    private void showInfo() {
-        Snackbar.make(movieContainer, "Data No Found", Snackbar.LENGTH_INDEFINITE).setAction("Exit", new View.OnClickListener() {
+    private void showInfo(String msg) {
+        if (movieContainer == null) {
+            return;
+        }
+
+        Snackbar.make(movieContainer, msg, Snackbar.LENGTH_INDEFINITE).setAction("Exit", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mActivity.onBackPressed();
@@ -145,6 +231,11 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
     }
 
     private void getTrailers() {
+        if (!trailers.isEmpty()) {
+            loadTrailer(trailers);
+            return;
+        }
+
         pbTrailer.setVisibility(View.VISIBLE);
         if (NetIoUtils.isConnectingToInternet(mActivity)) {
             Call<TrailersResponse> call = mRestClient
@@ -153,11 +244,13 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
             call.enqueue(this);
 
         } else {
-            Snackbar.make(listView, "Unable to load trailers at the moment..", Snackbar.LENGTH_INDEFINITE)
+            pbTrailer.setVisibility(View.GONE);
+            Snackbar.make(listView, "No Internet connection available.", Snackbar.LENGTH_INDEFINITE)
                     .setAction("Retry", new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             getTrailers();
+                            getReviews();
                         }
                     })
                     .show();
@@ -165,6 +258,13 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
     }
 
     private void getReviews() {
+
+        if (!reviews.isEmpty()) {
+            mReviewsAdapter.addAll(reviews);
+            mReviewsAdapter.notifyDataSetChanged();
+            return;
+        }
+
         pbReviews.setVisibility(View.VISIBLE);
         if (NetIoUtils.isConnectingToInternet(mActivity)) {
             Call<ReviewsResponse> call = mRestClient
@@ -175,7 +275,8 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
                 public void onResponse(Response<ReviewsResponse> response) {
                     pbReviews.setVisibility(View.GONE);
                     if (response.body() != null && !response.body().getReviews().isEmpty()) {
-                        mReviewsAdapter.addAll(response.body().getReviews());
+                        reviews.addAll(response.body().getReviews());
+                        mReviewsAdapter.addAll(reviews);
                     } else {
                         mReviewsAdapter.add(new Review(ReviewsAdapter.NO_REVIEW, ""));
                     }
@@ -188,11 +289,13 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
             });
 
         } else {
-            Snackbar.make(listView, "Unable to load trailers at the moment..", Snackbar.LENGTH_INDEFINITE)
+            pbReviews.setVisibility(View.GONE);
+            Snackbar.make(listView, "No Internet connection available.", Snackbar.LENGTH_INDEFINITE)
                     .setAction("Retry", new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             getTrailers();
+                            getReviews();
                         }
                     })
                     .show();
@@ -201,7 +304,9 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
 
     @Override
     public void onResponse(Response<TrailersResponse> response) {
-        loadTrailer(response.body().getTrailers());
+        this.trailers.clear();
+        this.trailers.addAll(response.body().getTrailers());
+        loadTrailer(trailers);
     }
 
     @Override
@@ -217,7 +322,7 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
             View child = prepareLayoutForTrailer(t);
             gridLayout.addView(child);
             GridLayout.LayoutParams params = (GridLayout.LayoutParams) child.getLayoutParams();
-            params.width = (gridLayout.getWidth() / gridLayout.getColumnCount()) - params.rightMargin - params.leftMargin;
+//            params.width = (gridLayout.getWidth() / gridLayout.getColumnCount());
             child.setLayoutParams(params);
         }
     }
@@ -231,7 +336,7 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(NetIoUtils.YOUTUBE_URL + t.getKey())));
             }
         });
-        view.setPadding(10, 0, 10, 0);
+        view.setPadding(8, 8, 8, 8);
         Picasso.with(mActivity)
                 .load(NetIoUtils.YOUTUBE_THUMBNAIL_URL
                         + t.getKey() + NetIoUtils.YOUTUBE_THUMBNAIL_FILE)

@@ -80,6 +80,10 @@ public class MoviesDB implements Parcelable {
         voteAverage = in.readDouble();
     }
 
+    public MoviesDB() {
+
+    }
+
     public static final Creator<MoviesDB> CREATOR = new Creator<MoviesDB>() {
         @Override
         public MoviesDB createFromParcel(Parcel in) {

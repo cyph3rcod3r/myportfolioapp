@@ -15,6 +15,8 @@
     <string name="user_property">Content-length</string>
     <string name="action_popular">Most Popular</string>
     <string name="action_highest_rated">Highest Rated</string>
+    <string name="action_favourite_movies">Favourite Movies</string>
+    <string name="action_share_trailer">Share Trailer</string>
     <string name="title_description">Overview</string>
     <string name="title_trailers">Trailers</string>
     <string name="title_reviews">Reviews</string>

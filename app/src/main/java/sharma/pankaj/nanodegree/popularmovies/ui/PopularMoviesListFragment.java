@@ -60,10 +60,16 @@ public class PopularMoviesListFragment extends BaseFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_most_popular:
+                mActivity.setCurrentItem(0);
                 mActivity.runMovieGetter(NetIoUtils.SORT_POPULARITY);
                 return true;
             case R.id.action_highest_rated:
+                mActivity.setCurrentItem(0);
                 mActivity.runMovieGetter(NetIoUtils.SORT_HIGHEST_RATED);
+                return true;
+            case R.id.action_favourite:
+                mActivity.setCurrentItem(0);
+                mActivity.loadFavouriteMovies();
                 return true;
         }
         return super.onOptionsItemSelected(item);

@@ -11,11 +11,13 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import sharma.pankaj.nanodegree.R;
+import sharma.pankaj.nanodegree.handler.SqliteHandler;
 import sharma.pankaj.nanodegree.interfaces.OnItemClickListener;
 import sharma.pankaj.nanodegree.models.MoviesDB;
 import sharma.pankaj.nanodegree.models.response.MoviesDbResponse;
@@ -37,6 +39,7 @@ public class PopularMoviesActivity extends AppCompatActivity implements OnItemCl
     private ArrayList<MoviesDB> currentMovieList;
     private ProgressBar mProgressBar;
     private int currentItem = 0;
+    private SqliteHandler sqliteHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +55,7 @@ public class PopularMoviesActivity extends AppCompatActivity implements OnItemCl
             }
         });
         mRestClient = new RestClient();
+        sqliteHandler = new SqliteHandler(this);
         mParentLayout = (LinearLayout) findViewById(R.id.parent);
         mProgressBar = (ProgressBar) findViewById(R.id.pbr_activity_pop);
         View container = findViewById(R.id.pop_movies_container);
@@ -99,6 +103,10 @@ public class PopularMoviesActivity extends AppCompatActivity implements OnItemCl
             call.enqueue(this);
 
         } else {
+            if (sqliteHandler.getTableRowCount(SqliteHandler.TABLE_FAVOURITE_MOVIES) > 0) {
+                loadFavouriteMovies();
+                return;
+            }
             Snackbar.make(mParentLayout, "No Internet Connection", Snackbar.LENGTH_INDEFINITE)
                     .setAction("Retry", new View.OnClickListener() {
                         @Override
@@ -107,6 +115,21 @@ public class PopularMoviesActivity extends AppCompatActivity implements OnItemCl
                         }
                     })
                     .show();
+        }
+    }
+
+    public void loadFavouriteMovies() {
+        if (sqliteHandler.getTableRowCount(SqliteHandler.TABLE_FAVOURITE_MOVIES) <= 0) {
+            Snackbar.make(mParentLayout, "You don't have any favourite movies.", Snackbar.LENGTH_LONG)
+                    .show();
+            return;
+        }
+        List<MoviesDB> favouriteList = sqliteHandler.getAllFavouriteMovies();
+        currentMovieList = new ArrayList<>(favouriteList);
+        popularMoviesListFragment.setMovieList(currentMovieList);
+
+        if (isDualPane && movieDetailFragment != null) {
+            movieDetailFragment.setData(currentMovieList.get(0));
         }
     }
 
@@ -132,11 +155,15 @@ public class PopularMoviesActivity extends AppCompatActivity implements OnItemCl
 //        this.response = response;
         currentMovieList = new ArrayList<>(response.body().getMoviesDBList());
         popularMoviesListFragment.setMovieList(currentMovieList);
+
+        if (isDualPane && movieDetailFragment != null && !currentMovieList.isEmpty()) {
+            movieDetailFragment.setData(currentMovieList.get(0));
+        }
     }
 
     @Override
     public void onFailure(Throwable t) {
-//        mProgressBar.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.GONE);
         Log.e("Error -", "" + t.getMessage());
         Snackbar.make(mParentLayout, "Unable To Connect.", Snackbar.LENGTH_INDEFINITE)
                 .setAction("Retry", new View.OnClickListener() {
@@ -150,5 +177,9 @@ public class PopularMoviesActivity extends AppCompatActivity implements OnItemCl
 
     public int getCurrentItem() {
         return currentItem;
+    }
+
+    public void setCurrentItem(int currentItem) {
+        this.currentItem = currentItem;
     }
 }

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/movie_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
     <include layout="@layout/toolbar" />
 
-    <ListView
-        android:id="@+id/listview_reviews"
+    <fragment
+        android:id="@+id/detail_fragment"
+        android:name="sharma.pankaj.nanodegree.popularmovies.ui.MovieDetailFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
