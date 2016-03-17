@@ -25,7 +25,6 @@ import sharma.pankaj.nanodegree.popularmovies.PopularMoviesActivity;
  */
 public class PopularMoviesListFragment extends BaseFragment {
 
-    private static final String SCROLL_STATE = "previous_state";
     private RecyclerView mRecyclerView;
     private MoviesAdapter mAdapter;
 

@@ -29,7 +29,6 @@ public class MovieDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
         initToolbar();
-
         if (getIntent() != null) {
             if (getIntent().hasExtra(ARG_OBJECT)) {
                 moviesDB = getIntent().getParcelableExtra(ARG_OBJECT);
@@ -37,9 +36,7 @@ public class MovieDetailActivity extends AppCompatActivity {
                 movieDetailFragment.setData(moviesDB);
             }
         }
-
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

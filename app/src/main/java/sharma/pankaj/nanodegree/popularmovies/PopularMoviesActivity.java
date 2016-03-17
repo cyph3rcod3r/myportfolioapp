@@ -152,7 +152,6 @@ public class PopularMoviesActivity extends AppCompatActivity implements OnItemCl
     @Override
     public void onResponse(Response<MoviesDbResponse> response) {
         mProgressBar.setVisibility(View.GONE);
-//        this.response = response;
         currentMovieList = new ArrayList<>(response.body().getMoviesDBList());
         popularMoviesListFragment.setMovieList(currentMovieList);
 

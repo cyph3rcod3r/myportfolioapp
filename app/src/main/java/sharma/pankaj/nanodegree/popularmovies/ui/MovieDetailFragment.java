@@ -55,7 +55,6 @@ public class MovieDetailFragment extends BaseFragment implements Callback<Traile
 
     private static final String SCROLL_STATE = "previous_state";
     private MoviesDB moviesDB;
-    public static final String ARG_OBJECT = MoviesDB.class.getName();
     private TextView txvTitle, txvYear, txvRunningTime, txvRate, txvDesc;
     private CheckBox cbFavourite;
     private ImageView imvThumb;
