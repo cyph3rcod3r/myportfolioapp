@@ -99,7 +99,7 @@ public class PopularMoviesActivity extends AppCompatActivity implements OnItemCl
             mProgressBar.setVisibility(View.VISIBLE);
             Call<MoviesDbResponse> call = mRestClient
                     .getMovieApis()
-                    .getMoviesList(getString(R.string.movies_db_api), sortOrder);
+                    .getMoviesList(getString(R.string.movies_db_api_test), sortOrder);
             call.enqueue(this);
 
         } else {
